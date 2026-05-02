@@ -242,17 +242,44 @@ html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(-
 .video-input-wrap { display: flex; gap: 10px; align-items: center; }
 .video-input-wrap .form-input { flex: 1; }
 
-/* ── LIGHTBOX ── */
-#lightbox {
-  display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,.92); z-index: 9998;
-  align-items: center; justify-content: center;
-  flex-direction: column;
-}
-#lightbox.show { display: flex; }
-#lightbox img { max-width: 90vw; max-height: 85vh; border-radius: 8px; object-fit: contain; }
-#lightbox-close { position: absolute; top: 20px; right: 24px; background: none; border: none; color: #f0e6d3; font-size: 24px; cursor: pointer; }
-.lb-caption { font-family: 'Playfair Display', serif; font-size: 13px; color: #c4a080; margin-top: 12px; font-style: italic; }
+
+/* ── SWIPE LIGHTBOX ── */
+#lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,.95); z-index:9998; flex-direction:column; align-items:center; justify-content:center; }
+#lightbox.show { display:flex; }
+.lb-inner { position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+.lb-img-wrap { position:relative; max-width:90vw; max-height:80vh; display:flex; align-items:center; justify-content:center; overflow:hidden; touch-action:pan-y; }
+#lightbox img { max-width:90vw; max-height:80vh; border-radius:8px; object-fit:contain; user-select:none; pointer-events:none; transition:transform .25s ease; }
+.lb-btn { position:absolute; top:50%; transform:translateY(-50%); background:rgba(255,255,255,.1); border:none; color:#f0e6d3; width:44px; height:44px; border-radius:50%; cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center; transition:background .2s; z-index:2; }
+.lb-btn:hover { background:rgba(255,255,255,.2); }
+.lb-prev { left:16px; }
+.lb-next { right:16px; }
+#lightbox-close { position:absolute; top:16px; right:20px; background:rgba(255,255,255,.1); border:none; color:#f0e6d3; width:36px; height:36px; border-radius:50%; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; z-index:10; }
+#lightbox-close:hover { background:rgba(255,255,255,.2); }
+.lb-counter { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); font-size:12px; color:#c4a080; letter-spacing:2px; }
+.lb-caption { position:absolute; bottom:44px; left:50%; transform:translateX(-50%); font-family:"Playfair Display",serif; font-size:13px; color:#c4a080; font-style:italic; white-space:nowrap; }
+.lb-dots { display:flex; gap:6px; position:absolute; bottom:16px; left:50%; transform:translateX(-50%); }
+.lb-dot { width:5px; height:5px; border-radius:50%; background:rgba(255,255,255,.3); transition:background .2s; }
+.lb-dot.active { background:#c4855a; }
+
+/* ── EDIT MODAL ── */
+#edit-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:9997; align-items:center; justify-content:center; padding:20px; }
+#edit-modal.show { display:flex; }
+.edit-box { background:var(--bg); border-radius:20px; padding:28px; width:100%; max-width:480px; max-height:80vh; overflow-y:auto; }
+.edit-title { font-family:"Playfair Display",serif; font-size:20px; color:var(--dark); margin-bottom:20px; }
+.edit-actions { display:flex; gap:10px; margin-top:20px; }
+.edit-save { flex:1; padding:12px; background:var(--dark); color:#f0e6d3; border:none; border-radius:10px; font-size:13px; letter-spacing:1px; cursor:pointer; }
+.edit-save:hover { background:var(--mid); }
+.edit-cancel { padding:12px 20px; background:transparent; border:0.5px solid var(--border); border-radius:10px; font-size:13px; color:var(--muted); cursor:pointer; }
+.edit-cancel:hover { background:var(--bg2); }
+.edit-delete { padding:12px 16px; background:transparent; border:0.5px solid #e88a8a; border-radius:10px; font-size:13px; color:#c45a5a; cursor:pointer; }
+.edit-delete:hover { background:#fdf0f0; }
+
+/* ── SETTINGS MODAL ── */
+#settings-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:9997; align-items:center; justify-content:center; padding:20px; }
+#settings-modal.show { display:flex; }
+.settings-box { background:var(--bg); border-radius:20px; padding:28px; width:100%; max-width:380px; }
+.settings-title { font-family:"Playfair Display",serif; font-size:20px; color:var(--dark); margin-bottom:20px; }
+
 
 /* ── LOADING ── */
 .loading { display: flex; align-items: center; justify-content: center; padding: 40px; }
@@ -307,6 +334,7 @@ html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(-
     <span class="topbar-logo">Rainda</span>
     <div class="topbar-right">
       <span class="topbar-badge">✦ Private</span>
+      <button class="topbar-lock" onclick="openSettings()" style="margin-right:4px">Sandi</button>
       <button class="topbar-lock" onclick="lockApp()">Kunci</button>
     </div>
   </div>
@@ -409,10 +437,13 @@ html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(-
           </div>
         </div>
         <div id="album-detail-view" style="display:none">
-          <button class="back-btn" onclick="closeAlbumDetail()">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3L5 8l5 5"/></svg>
-            Kembali ke Album
-          </button>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+            <button class="back-btn" style="margin-bottom:0" onclick="closeAlbumDetail()">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3L5 8l5 5"/></svg>
+              Kembali ke Album
+            </button>
+            <button onclick="openEditModal()" style="font-size:11px;color:var(--accent);background:transparent;border:0.5px solid var(--accent);padding:6px 14px;border-radius:8px;cursor:pointer;letter-spacing:1px">Edit</button>
+          </div>
           <div class="page-header">
             <div class="page-tag" id="detail-tag">✦</div>
             <div class="page-title" id="detail-title">Album</div>
@@ -525,10 +556,74 @@ html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(-
 </div>
 
 <!-- LIGHTBOX -->
-<div id="lightbox" onclick="closeLightbox()">
+<div id="lightbox">
   <button id="lightbox-close" onclick="closeLightbox()">✕</button>
-  <img id="lightbox-img" src="" alt="">
+  <div class="lb-inner">
+    <button class="lb-btn lb-prev" onclick="lbPrev()">&#8249;</button>
+    <div class="lb-img-wrap" id="lb-img-wrap">
+      <img id="lightbox-img" src="" alt="">
+    </div>
+    <button class="lb-btn lb-next" onclick="lbNext()">&#8250;</button>
+  </div>
   <div class="lb-caption" id="lb-caption"></div>
+  <div class="lb-counter" id="lb-counter"></div>
+  <div class="lb-dots" id="lb-dots"></div>
+</div>
+
+<!-- EDIT MODAL -->
+<div id="edit-modal">
+  <div class="edit-box">
+    <div class="edit-title">Edit Kenangan</div>
+    <div class="form-section">
+      <label class="form-label">Nama tempat</label>
+      <input class="form-input" type="text" id="e-place">
+    </div>
+    <div class="form-section">
+      <label class="form-label">Tanggal</label>
+      <input class="form-input" type="date" id="e-date">
+    </div>
+    <div class="form-section">
+      <label class="form-label">Cerita</label>
+      <textarea class="form-input form-textarea" id="e-story"></textarea>
+    </div>
+    <div class="form-section">
+      <label class="form-label">Link video YouTube (opsional)</label>
+      <input class="form-input" type="url" id="e-video">
+    </div>
+    <div class="form-section">
+      <label class="form-label">Tambah foto baru (opsional)</label>
+      <div class="upload-zone" style="padding:16px" onclick="document.getElementById('e-photos').click()">
+        <div class="upload-text" style="font-size:12px">Tap untuk tambah foto</div>
+      </div>
+      <input type="file" id="e-photos" multiple accept="image/*" style="display:none" onchange="handleEditPhotos(this)">
+      <div class="upload-preview" id="edit-preview"></div>
+    </div>
+    <div class="edit-actions">
+      <button class="edit-cancel" onclick="closeEditModal()">Batal</button>
+      <button class="edit-delete" onclick="deleteAlbum()">Hapus</button>
+      <button class="edit-save" onclick="saveEdit()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div id="settings-modal">
+  <div class="settings-box">
+    <div class="settings-title">Pengaturan</div>
+    <div class="form-section">
+      <label class="form-label">Password baru</label>
+      <input class="form-input" type="password" id="new-pw" placeholder="Masukkan password baru">
+    </div>
+    <div class="form-section">
+      <label class="form-label">Konfirmasi password baru</label>
+      <input class="form-input" type="password" id="confirm-pw" placeholder="Ulangi password baru">
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:16px">Password disimpan di browser ini saja. Setiap perangkat baru perlu diatur ulang.</div>
+    <div class="edit-actions">
+      <button class="edit-cancel" onclick="closeSettings()">Batal</button>
+      <button class="edit-save" onclick="savePassword()">Simpan Password</button>
+    </div>
+  </div>
 </div>
 
 <!-- TOAST -->
@@ -581,7 +676,9 @@ let firebaseReady = false;
 // ── LOCK ──
 function tryUnlock() {
   const val = document.getElementById('lock-input').value;
-  if (val === window.PASSWORD) {
+  const storedPw = localStorage.getItem('rainda_pw');
+  const activePw = storedPw || window.PASSWORD;
+  if (val === activePw) {
     document.getElementById('lock-screen').classList.add('hide');
     document.getElementById('app').classList.add('show');
     setTimeout(() => {
@@ -731,7 +828,8 @@ function openAlbumDetail(id) {
   document.getElementById('detail-sub').textContent = `${(a.photos||[]).length} foto${a.video?' · 1 video':''}`;
   document.getElementById('detail-story').textContent = a.story || 'Belum ada cerita.';
   const grid = document.getElementById('detail-grid');
-  let html = (a.photos||[]).map(p=>`<img class="detail-photo" src="${p}" alt="" loading="lazy" onclick="openLightbox('${p}','${a.place}')">`).join('');
+  const photos = a.photos || [];
+  let html = photos.map((p,i)=>`<img class="detail-photo" src="${p}" alt="" loading="lazy" onclick="openLightbox('${p}','${a.place}',${JSON.stringify(photos)},${i})">`).join('');
   if (a.video) {
     const vid = getYTEmbed(a.video);
     if (vid) html += `<div style="grid-column:1/-1;border-radius:12px;overflow:hidden;margin-top:8px"><iframe width="100%" height="200" src="${vid}" frameborder="0" allowfullscreen style="display:block"></iframe></div>`;
@@ -895,15 +993,158 @@ async function submitAlbum() {
 }
 window.submitAlbum = submitAlbum;
 
-// ── LIGHTBOX ──
-function openLightbox(src, caption) {
-  document.getElementById('lightbox-img').src = src;
-  document.getElementById('lb-caption').textContent = caption || '';
+// ── LIGHTBOX WITH SWIPE ──
+let lbPhotos = [], lbIndex = 0, lbCaption = '';
+let tsX = 0, tsY = 0;
+
+function openLightbox(src, caption, photos, idx) {
+  lbPhotos = photos || [src];
+  lbIndex = idx !== undefined ? idx : lbPhotos.indexOf(src);
+  if (lbIndex < 0) lbIndex = 0;
+  lbCaption = caption || '';
+  renderLightbox();
   document.getElementById('lightbox').classList.add('show');
+  document.body.style.overflow = 'hidden';
 }
-function closeLightbox() { document.getElementById('lightbox').classList.remove('show'); }
+
+function renderLightbox() {
+  document.getElementById('lightbox-img').src = lbPhotos[lbIndex];
+  document.getElementById('lb-caption').textContent = lbCaption;
+  document.getElementById('lb-counter').textContent = lbPhotos.length > 1 ? (lbIndex+1) + ' / ' + lbPhotos.length : '';
+  const dots = document.getElementById('lb-dots');
+  if (lbPhotos.length > 1 && lbPhotos.length <= 12) {
+    dots.innerHTML = lbPhotos.map((_,i) => `<div class="lb-dot${i===lbIndex?' active':''}"></div>`).join('');
+  } else { dots.innerHTML = ''; }
+}
+
+function lbNext() { if (lbPhotos.length > 1) { lbIndex = (lbIndex+1) % lbPhotos.length; renderLightbox(); } }
+function lbPrev() { if (lbPhotos.length > 1) { lbIndex = (lbIndex-1+lbPhotos.length) % lbPhotos.length; renderLightbox(); } }
+
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+// Touch swipe
+const lbWrap = document.getElementById('lb-img-wrap');
+lbWrap.addEventListener('touchstart', e => { tsX = e.touches[0].clientX; tsY = e.touches[0].clientY; }, {passive:true});
+lbWrap.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - tsX;
+  const dy = e.changedTouches[0].clientY - tsY;
+  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) { dx < 0 ? lbNext() : lbPrev(); }
+});
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('lightbox').classList.contains('show')) return;
+  if (e.key === 'ArrowRight') lbNext();
+  if (e.key === 'ArrowLeft') lbPrev();
+  if (e.key === 'Escape') closeLightbox();
+});
+
+document.getElementById('lightbox').addEventListener('click', e => {
+  if (e.target === document.getElementById('lightbox')) closeLightbox();
+});
+
 window.openLightbox = openLightbox;
 window.closeLightbox = closeLightbox;
+window.lbNext = lbNext;
+window.lbPrev = lbPrev;
+
+// ── EDIT MODAL ──
+let editPhotos = [];
+
+function openEditModal() {
+  if (!currentAlbum) return;
+  document.getElementById('e-place').value = currentAlbum.place || '';
+  document.getElementById('e-date').value = currentAlbum.date || '';
+  document.getElementById('e-story').value = currentAlbum.story || '';
+  document.getElementById('e-video').value = currentAlbum.video || '';
+  document.getElementById('edit-preview').innerHTML = '';
+  editPhotos = [];
+  document.getElementById('edit-modal').classList.add('show');
+}
+
+function closeEditModal() { document.getElementById('edit-modal').classList.remove('show'); }
+window.openEditModal = openEditModal;
+window.closeEditModal = closeEditModal;
+
+function handleEditPhotos(input) {
+  editPhotos = Array.from(input.files);
+  const preview = document.getElementById('edit-preview');
+  preview.innerHTML = editPhotos.map((f,i) => {
+    const url = URL.createObjectURL(f);
+    return `<div class="upload-preview-item"><img src="${url}" alt=""></div>`;
+  }).join('');
+}
+window.handleEditPhotos = handleEditPhotos;
+
+async function saveEdit() {
+  if (!currentAlbum) return;
+  const place = document.getElementById('e-place').value.trim();
+  const date = document.getElementById('e-date').value;
+  const story = document.getElementById('e-story').value.trim();
+  const video = document.getElementById('e-video').value.trim();
+  if (!place || !date) { showToast('Nama tempat dan tanggal wajib diisi'); return; }
+
+  const btn = document.querySelector('.edit-save');
+  btn.textContent = 'Menyimpan...';
+  btn.disabled = true;
+
+  try {
+    let newPhotos = [...(currentAlbum.photos || [])];
+    for (const f of editPhotos) {
+      const url = await uploadToCloudinary(f, ()=>{});
+      newPhotos.push(url);
+    }
+    await window._updateDoc(window._doc(window._db, 'albums', currentAlbum.id), { place, date, story, video, photos: newPhotos });
+    showToast('Kenangan berhasil diperbarui ✦');
+    closeEditModal();
+    await loadAllData();
+    const updated = albums.find(a => a.id === currentAlbum.id);
+    if (updated) openAlbumDetail(updated.id);
+  } catch(e) {
+    console.error(e);
+    showToast('Gagal menyimpan. Coba lagi.');
+  }
+  btn.textContent = 'Simpan'; btn.disabled = false;
+}
+window.saveEdit = saveEdit;
+
+async function deleteAlbum() {
+  if (!currentAlbum) return;
+  if (!confirm('Hapus album "' + currentAlbum.place + '"? Tindakan ini tidak bisa dibatalkan.')) return;
+  try {
+    const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    await deleteDoc(window._doc(window._db, 'albums', currentAlbum.id));
+    showToast('Album berhasil dihapus');
+    closeEditModal();
+    closeAlbumDetail();
+    await loadAllData();
+  } catch(e) { showToast('Gagal menghapus. Coba lagi.'); }
+}
+window.deleteAlbum = deleteAlbum;
+
+// ── PASSWORD SETTINGS ──
+function openSettings() { document.getElementById('settings-modal').classList.add('show'); }
+function closeSettings() { document.getElementById('settings-modal').classList.remove('show'); }
+window.openSettings = openSettings;
+window.closeSettings = closeSettings;
+
+function savePassword() {
+  const np = document.getElementById('new-pw').value;
+  const cp = document.getElementById('confirm-pw').value;
+  if (!np) { showToast('Password tidak boleh kosong'); return; }
+  if (np !== cp) { showToast('Password tidak cocok'); return; }
+  if (np.length < 6) { showToast('Password minimal 6 karakter'); return; }
+  localStorage.setItem('rainda_pw', np);
+  window.PASSWORD = np;
+  showToast('Password berhasil diubah ✦');
+  document.getElementById('new-pw').value = '';
+  document.getElementById('confirm-pw').value = '';
+  closeSettings();
+}
+window.savePassword = savePassword;
 
 // ── HELPERS ──
 function formatDate(str) {
