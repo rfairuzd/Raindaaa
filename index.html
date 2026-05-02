@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2d1b0e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rainda">
+<title>Rainda</title>
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg: #fdf6f0;
+  --bg2: #f5ede4;
+  --bg3: #edddd0;
+  --dark: #2d1b0e;
+  --mid: #6a4030;
+  --muted: #b0906a;
+  --accent: #c4855a;
+  --accent2: #e8c4a0;
+  --border: #e0d4c8;
+  --white: #fffcf8;
+  --sidebar-w: 200px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--dark); overflow: hidden; }
+
+/* ── LOCK SCREEN ── */
+#lock-screen {
+  position: fixed; inset: 0; background: var(--dark);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 9999; gap: 24px;
+  transition: opacity .6s ease;
+}
+#lock-screen.hide { opacity: 0; pointer-events: none; }
+.lock-ornament { font-family: 'Playfair Display', serif; font-size: 11px; color: var(--accent); letter-spacing: 6px; text-transform: uppercase; }
+.lock-title { font-family: 'Playfair Display', serif; font-size: 36px; color: #f0e6d3; font-style: italic; text-align: center; line-height: 1.2; }
+.lock-sub { font-size: 12px; color: #8a6a50; letter-spacing: 1px; }
+.lock-input {
+  background: transparent; border: none; border-bottom: 1px solid #4a3020;
+  color: #f0e6d3; font-size: 18px; text-align: center; letter-spacing: 8px;
+  padding: 8px 0; width: 200px; outline: none;
+  font-family: 'DM Sans', sans-serif;
+}
+.lock-input::placeholder { color: #4a3020; letter-spacing: 4px; font-size: 14px; }
+.lock-btn {
+  background: transparent; border: 1px solid var(--accent); color: var(--accent);
+  padding: 10px 36px; font-size: 12px; letter-spacing: 3px; text-transform: uppercase;
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+  transition: all .2s;
+}
+.lock-btn:hover { background: var(--accent); color: var(--dark); }
+.lock-err { font-size: 11px; color: #c45a5a; letter-spacing: 1px; opacity: 0; transition: opacity .3s; }
+.lock-err.show { opacity: 1; }
+
+/* ── APP SHELL ── */
+#app { display: flex; flex-direction: column; height: 100vh; opacity: 0; transition: opacity .6s ease; }
+#app.show { opacity: 1; }
+
+/* ── TOPBAR ── */
+.topbar {
+  background: var(--dark); padding: 12px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0; z-index: 100;
+}
+.topbar-logo { font-family: 'Playfair Display', serif; font-size: 17px; color: #f0e6d3; font-style: italic; letter-spacing: 1px; }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.topbar-badge { font-size: 9px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; }
+.topbar-lock { background: none; border: none; color: #6a4a30; cursor: pointer; font-size: 11px; letter-spacing: 1px; transition: color .2s; }
+.topbar-lock:hover { color: var(--accent); }
+
+/* ── BODY ── */
+.app-body { display: flex; flex: 1; overflow: hidden; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: var(--sidebar-w); background: var(--bg2);
+  border-right: 0.5px solid var(--border);
+  display: flex; flex-direction: column;
+  flex-shrink: 0; overflow-y: auto;
+  padding: 12px 0 20px;
+}
+.sidebar-section { margin-bottom: 4px; }
+.sidebar-label {
+  font-size: 9px; color: var(--muted); letter-spacing: 2px;
+  text-transform: uppercase; padding: 10px 16px 4px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 16px; cursor: pointer;
+  border-left: 2px solid transparent;
+  transition: all .15s;
+}
+.nav-item:hover { background: var(--bg3); }
+.nav-item.active { background: #e8d4c0; border-left: 2px solid var(--accent); }
+.nav-icon { width: 15px; height: 15px; flex-shrink: 0; opacity: .65; }
+.nav-item.active .nav-icon { opacity: 1; }
+.nav-label { font-size: 12px; color: var(--mid); }
+.nav-item.active .nav-label { color: var(--dark); font-weight: 500; }
+.nav-badge { font-size: 8px; background: var(--accent2); color: #8a4820; padding: 1px 6px; border-radius: 8px; margin-left: 2px; }
+
+/* ── MAIN CONTENT ── */
+.main { flex: 1; overflow-y: auto; background: var(--bg); }
+.page { display: none; padding: 28px; min-height: 100%; }
+.page.active { display: block; }
+
+/* ── PAGE HEADERS ── */
+.page-header { margin-bottom: 24px; }
+.page-tag { font-size: 9px; color: var(--accent); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 6px; }
+.page-title { font-family: 'Playfair Display', serif; font-size: 26px; color: var(--dark); line-height: 1.2; }
+.page-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+/* ── BERANDA ── */
+.beranda-hero { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.hero-quote { background: var(--dark); border-radius: 16px; padding: 24px; display: flex; flex-direction: column; justify-content: space-between; min-height: 160px; }
+.hero-quote-text { font-family: 'Playfair Display', serif; font-size: 16px; color: #f0e6d3; font-style: italic; line-height: 1.6; }
+.hero-quote-date { font-size: 10px; color: var(--accent); letter-spacing: 2px; margin-top: 12px; }
+.hero-stats { display: flex; flex-direction: column; gap: 10px; }
+.stat-card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+.stat-num { font-family: 'Playfair Display', serif; font-size: 28px; color: var(--dark); }
+.stat-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.section-title { font-family: 'Playfair Display', serif; font-size: 16px; color: var(--dark); margin-bottom: 14px; }
+.recent-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 24px; }
+.recent-card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: 12px; overflow: hidden; cursor: pointer; transition: transform .15s; }
+.recent-card:hover { transform: translateY(-2px); }
+.recent-thumb { height: 90px; background: var(--bg3); overflow: hidden; position: relative; }
+.recent-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.recent-thumb-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+.recent-info { padding: 10px 12px; }
+.recent-place { font-size: 12px; font-weight: 500; color: var(--dark); }
+.recent-date { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+/* ── TIMELINE ── */
+.timeline-list { display: flex; flex-direction: column; gap: 0; }
+.timeline-year { font-family: 'Playfair Display', serif; font-size: 13px; color: var(--accent); letter-spacing: 2px; margin: 20px 0 12px; }
+.timeline-year:first-child { margin-top: 0; }
+.timeline-item { display: flex; gap: 16px; margin-bottom: 16px; }
+.tl-left { display: flex; flex-direction: column; align-items: center; width: 16px; flex-shrink: 0; padding-top: 4px; }
+.tl-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); flex-shrink: 0; }
+.tl-line { width: 1px; flex: 1; background: var(--border); margin-top: 4px; }
+.tl-card { flex: 1; background: var(--white); border: 0.5px solid var(--border); border-radius: 14px; padding: 16px; cursor: pointer; transition: all .15s; margin-bottom: 4px; }
+.tl-card:hover { border-color: var(--accent); }
+.tl-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.tl-place { font-family: 'Playfair Display', serif; font-size: 16px; color: var(--dark); }
+.tl-date { font-size: 10px; color: var(--muted); letter-spacing: 1px; }
+.tl-desc { font-size: 12px; color: var(--mid); line-height: 1.6; margin-bottom: 12px; font-style: italic; }
+.tl-photos { display: flex; gap: 6px; flex-wrap: wrap; }
+.tl-photo { width: 56px; height: 44px; border-radius: 8px; object-fit: cover; background: var(--bg3); }
+.tl-more { width: 56px; height: 44px; border-radius: 8px; background: var(--bg3); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--muted); font-weight: 500; }
+
+/* ── ALBUM ── */
+.album-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.album-card { background: var(--white); border: 0.5px solid var(--border); border-radius: 16px; overflow: hidden; cursor: pointer; transition: transform .15s; }
+.album-card:hover { transform: translateY(-2px); }
+.album-cover { height: 140px; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 2px; background: var(--bg3); overflow: hidden; }
+.album-cover-cell { background: var(--bg3); overflow: hidden; }
+.album-cover-cell img { width: 100%; height: 100%; object-fit: cover; }
+.album-cover-placeholder { width: 100%; height: 100%; }
+.album-info { padding: 14px 16px; }
+.album-name { font-family: 'Playfair Display', serif; font-size: 16px; color: var(--dark); }
+.album-meta { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.album-add { border: 1px dashed var(--border); background: transparent; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px; min-height: 200px; cursor: pointer; transition: all .15s; }
+.album-add:hover { border-color: var(--accent); background: var(--bg2); }
+.album-add-icon { font-size: 24px; color: var(--muted); }
+.album-add-label { font-size: 12px; color: var(--muted); }
+
+/* ── ALBUM DETAIL ── */
+.album-detail { display: none; }
+.album-detail.active { display: block; }
+.back-btn { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); cursor: pointer; margin-bottom: 20px; background: none; border: none; padding: 0; }
+.back-btn:hover { color: var(--accent); }
+.detail-story { background: var(--bg2); border-left: 2px solid var(--accent); border-radius: 0 10px 10px 0; padding: 14px 16px; margin-bottom: 20px; font-family: 'Playfair Display', serif; font-size: 13px; color: var(--mid); line-height: 1.7; font-style: italic; }
+.detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.detail-photo { aspect-ratio: 1; border-radius: 10px; object-fit: cover; background: var(--bg3); cursor: pointer; transition: transform .15s; width: 100%; }
+.detail-photo:hover { transform: scale(1.02); }
+
+/* ── PETA ── */
+.map-placeholder { background: var(--bg2); border: 0.5px solid var(--border); border-radius: 16px; height: 280px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+.map-pins { display: flex; flex-direction: column; gap: 10px; }
+.map-pin-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--white); border: 0.5px solid var(--border); border-radius: 12px; }
+.pin-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+.pin-place { font-size: 13px; font-weight: 500; color: var(--dark); }
+.pin-date { font-size: 11px; color: var(--muted); margin-left: auto; }
+.pin-count { font-size: 10px; color: var(--accent); background: var(--accent2); padding: 2px 8px; border-radius: 8px; }
+
+/* ── FAVORIT ── */
+.favorit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.fav-photo { aspect-ratio: 1; border-radius: 10px; background: var(--bg3); position: relative; cursor: pointer; overflow: hidden; transition: transform .15s; }
+.fav-photo:hover { transform: scale(1.02); }
+.fav-photo img { width: 100%; height: 100%; object-fit: cover; }
+.fav-heart { position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; background: rgba(255,255,255,.8); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+
+/* ── MOMEN ── */
+.momen-list { display: flex; flex-direction: column; gap: 12px; }
+.momen-card { background: var(--white); border: 0.5px solid var(--border); border-radius: 14px; padding: 16px 18px; display: flex; align-items: center; gap: 16px; }
+.momen-icon-wrap { width: 44px; height: 44px; border-radius: 50%; background: var(--accent2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.momen-info { flex: 1; }
+.momen-name { font-family: 'Playfair Display', serif; font-size: 15px; color: var(--dark); }
+.momen-date { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.momen-days { font-size: 11px; color: var(--accent); font-weight: 500; }
+.momen-add-btn { background: transparent; border: 1px dashed var(--border); border-radius: 12px; padding: 14px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; color: var(--muted); font-size: 12px; transition: all .15s; }
+.momen-add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── TAMBAH ── */
+.form-section { margin-bottom: 24px; }
+.form-label { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; display: block; }
+.form-input {
+  width: 100%; padding: 12px 14px; background: var(--white);
+  border: 0.5px solid var(--border); border-radius: 10px;
+  font-size: 13px; color: var(--dark); font-family: 'DM Sans', sans-serif;
+  outline: none; transition: border-color .2s;
+}
+.form-input:focus { border-color: var(--accent); }
+.form-textarea { min-height: 100px; resize: vertical; }
+.form-select { appearance: none; cursor: pointer; }
+.upload-zone {
+  border: 1.5px dashed var(--border); border-radius: 14px;
+  padding: 32px; text-align: center; cursor: pointer;
+  transition: all .2s; background: var(--white);
+}
+.upload-zone:hover { border-color: var(--accent); background: var(--bg2); }
+.upload-zone.dragover { border-color: var(--accent); background: var(--bg2); }
+.upload-icon { color: var(--muted); margin-bottom: 10px; }
+.upload-text { font-size: 13px; color: var(--muted); }
+.upload-text span { color: var(--accent); }
+.upload-preview { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 14px; }
+.upload-preview-item { aspect-ratio: 1; border-radius: 8px; overflow: hidden; position: relative; background: var(--bg3); }
+.upload-preview-item img { width: 100%; height: 100%; object-fit: cover; }
+.upload-remove { position: absolute; top: 4px; right: 4px; width: 18px; height: 18px; background: rgba(0,0,0,.5); border-radius: 50%; border: none; color: white; cursor: pointer; font-size: 10px; display: flex; align-items: center; justify-content: center; }
+.submit-btn {
+  width: 100%; padding: 14px; background: var(--dark); color: #f0e6d3;
+  border: none; border-radius: 12px; font-size: 13px; letter-spacing: 2px;
+  text-transform: uppercase; cursor: pointer; font-family: 'DM Sans', sans-serif;
+  transition: all .2s;
+}
+.submit-btn:hover { background: var(--mid); }
+.submit-btn:disabled { opacity: .5; cursor: not-allowed; }
+.video-input-wrap { display: flex; gap: 10px; align-items: center; }
+.video-input-wrap .form-input { flex: 1; }
+
+
+/* ── SWIPE LIGHTBOX ── */
+#lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,.95); z-index:9998; flex-direction:column; align-items:center; justify-content:center; }
+#lightbox.show { display:flex; }
+.lb-inner { position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+.lb-img-wrap { position:relative; max-width:90vw; max-height:80vh; display:flex; align-items:center; justify-content:center; overflow:hidden; touch-action:pan-y; }
+#lightbox img { max-width:90vw; max-height:80vh; border-radius:8px; object-fit:contain; user-select:none; pointer-events:none; transition:transform .25s ease; }
+.lb-btn { position:absolute; top:50%; transform:translateY(-50%); background:rgba(255,255,255,.1); border:none; color:#f0e6d3; width:44px; height:44px; border-radius:50%; cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center; transition:background .2s; z-index:2; }
+.lb-btn:hover { background:rgba(255,255,255,.2); }
+.lb-prev { left:16px; }
+.lb-next { right:16px; }
+#lightbox-close { position:absolute; top:16px; right:20px; background:rgba(255,255,255,.1); border:none; color:#f0e6d3; width:36px; height:36px; border-radius:50%; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; z-index:10; }
+#lightbox-close:hover { background:rgba(255,255,255,.2); }
+.lb-counter { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); font-size:12px; color:#c4a080; letter-spacing:2px; }
+.lb-caption { position:absolute; bottom:44px; left:50%; transform:translateX(-50%); font-family:"Playfair Display",serif; font-size:13px; color:#c4a080; font-style:italic; white-space:nowrap; }
+.lb-dots { display:flex; gap:6px; position:absolute; bottom:16px; left:50%; transform:translateX(-50%); }
+.lb-dot { width:5px; height:5px; border-radius:50%; background:rgba(255,255,255,.3); transition:background .2s; }
+.lb-dot.active { background:#c4855a; }
+
+/* ── EDIT MODAL ── */
+#edit-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:9997; align-items:center; justify-content:center; padding:20px; }
+#edit-modal.show { display:flex; }
+.edit-box { background:var(--bg); border-radius:20px; padding:28px; width:100%; max-width:480px; max-height:80vh; overflow-y:auto; }
+.edit-title { font-family:"Playfair Display",serif; font-size:20px; color:var(--dark); margin-bottom:20px; }
+.edit-actions { display:flex; gap:10px; margin-top:20px; }
+.edit-save { flex:1; padding:12px; background:var(--dark); color:#f0e6d3; border:none; border-radius:10px; font-size:13px; letter-spacing:1px; cursor:pointer; }
+.edit-save:hover { background:var(--mid); }
+.edit-cancel { padding:12px 20px; background:transparent; border:0.5px solid var(--border); border-radius:10px; font-size:13px; color:var(--muted); cursor:pointer; }
+.edit-cancel:hover { background:var(--bg2); }
+.edit-delete { padding:12px 16px; background:transparent; border:0.5px solid #e88a8a; border-radius:10px; font-size:13px; color:#c45a5a; cursor:pointer; }
+.edit-delete:hover { background:#fdf0f0; }
+
+/* ── SETTINGS MODAL ── */
+#settings-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:9997; align-items:center; justify-content:center; padding:20px; }
+#settings-modal.show { display:flex; }
+.settings-box { background:var(--bg); border-radius:20px; padding:28px; width:100%; max-width:380px; }
+.settings-title { font-family:"Playfair Display",serif; font-size:20px; color:var(--dark); margin-bottom:20px; }
+
+
+/* ── LOADING ── */
+.loading { display: flex; align-items: center; justify-content: center; padding: 40px; }
+.loading-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: ldot .8s infinite alternate; margin: 0 3px; }
+.loading-dot:nth-child(2) { animation-delay: .2s; }
+.loading-dot:nth-child(3) { animation-delay: .4s; }
+@keyframes ldot { to { opacity: .2; transform: translateY(-4px); } }
+
+/* ── TOAST ── */
+#toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--dark); color: #f0e6d3; padding: 10px 20px;
+  border-radius: 20px; font-size: 12px; letter-spacing: 1px;
+  opacity: 0; transition: all .3s; z-index: 9999; white-space: nowrap;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── UPLOAD PROGRESS ── */
+.progress-bar { height: 3px; background: var(--bg3); border-radius: 2px; overflow: hidden; margin-top: 8px; }
+.progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width .3s; border-radius: 2px; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  :root { --sidebar-w: 56px; }
+  .nav-label, .nav-badge, .sidebar-label { display: none; }
+  .nav-item { justify-content: center; padding: 12px; }
+  .nav-icon { width: 18px; height: 18px; opacity: .7; }
+  .nav-item.active .nav-icon { opacity: 1; }
+  .page { padding: 16px; }
+  .beranda-hero { grid-template-columns: 1fr; }
+  .recent-grid { grid-template-columns: 1fr 1fr; }
+  .album-grid { grid-template-columns: 1fr; }
+  .detail-grid, .favorit-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- LOCK SCREEN -->
+<div id="lock-screen">
+  <span class="lock-ornament">✦ private ✦</span>
+  <div class="lock-title">Kenangan<br>Kita</div>
+  <div class="lock-sub">masukkan kata sandi untuk melanjutkan</div>
+  <input class="lock-input" type="password" id="lock-input" placeholder="••••••••" autocomplete="off">
+  <div class="lock-err" id="lock-err">kata sandi salah, coba lagi</div>
+  <button class="lock-btn" onclick="tryUnlock()">Masuk</button>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <span class="topbar-logo">Rainda</span>
+    <div class="topbar-right">
+      <span class="topbar-badge">✦ Private</span>
+      <button class="topbar-lock" onclick="openSettings()" style="margin-right:4px">Sandi</button>
+      <button class="topbar-lock" onclick="lockApp()">Kunci</button>
+    </div>
+  </div>
+  <div class="app-body">
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Jelajahi</div>
+        <div class="nav-item active" onclick="showPage('beranda', this)">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 6.5L8 2l6 4.5V14H2V6.5z"/></svg>
+          <span class="nav-label">Beranda</span>
+        </div>
+        <div class="nav-item" onclick="showPage('timeline', this)">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="4" cy="4" r="1.5"/><circle cx="4" cy="8" r="1.5"/><circle cx="4" cy="12" r="1.5"/><line x1="6.5" y1="4" x2="14" y2="4"/><line x1="6.5" y1="8" x2="14" y2="8"/><line x1="6.5" y1="12" x2="14" y2="12"/></svg>
+          <span class="nav-label">Timeline</span>
+        </div>
+        <div class="nav-item" onclick="showPage('album', this)">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="8" height="10" rx="1.5"/><rect x="4" y="1" width="8" height="10" rx="1.5"/></svg>
+          <span class="nav-label">Album</span>
+        </div>
+        <div class="nav-item" onclick="showPage('peta', this)">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2C5.8 2 4 3.8 4 6c0 3 4 8 4 8s4-5 4-8c0-2.2-1.8-4-4-4z"/><circle cx="8" cy="6" r="1.5"/></svg>
+          <span class="nav-label">Peta</span>
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Kenangan</div>
+        <div class="nav-item" onclick="showPage('favorit', this)">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 13.5S2 9.5 2 5.5A3.5 3.5 0 018 3.5 3.5 3.5 0 0114 5.5c0 4-6 8-6 8z"/></svg>
+          <span class="nav-label">Favorit</span>
+        </div>
+        <div class="nav-item" onclick="showPage('momen', this)">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M5 3V1M11 3V1M2 7h12"/></svg>
+          <span class="nav-label">Momen</span>
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Kelola</div>
+        <div class="nav-item" onclick="showPage('tambah', this)">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="11"/><line x1="5" y1="8" x2="11" y2="8"/></svg>
+          <span class="nav-label">Tambah</span>
+        </div>
+      </div>
+    </nav>
+
+    <!-- MAIN -->
+    <main class="main">
+
+      <!-- BERANDA -->
+      <div class="page active" id="page-beranda">
+        <div class="page-header">
+          <div class="page-tag">✦ Selamat datang</div>
+          <div class="page-title" id="beranda-greeting">Rainda</div>
+          <div class="page-sub" id="beranda-sub">Galeri perjalanan kita</div>
+        </div>
+        <div class="beranda-hero">
+          <div class="hero-quote">
+            <div class="hero-quote-text" id="hero-quote">"Setiap perjalanan adalah halaman baru dalam cerita kita bersama."</div>
+            <div class="hero-quote-date" id="hero-date">— mulai hari ini</div>
+          </div>
+          <div class="hero-stats">
+            <div class="stat-card">
+              <div class="stat-num" id="stat-albums">0</div>
+              <div class="stat-label">Album perjalanan</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-num" id="stat-photos">0</div>
+              <div class="stat-label">Foto tersimpan</div>
+            </div>
+          </div>
+        </div>
+        <div class="section-title">Perjalanan terbaru</div>
+        <div class="recent-grid" id="recent-grid">
+          <div class="loading"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>
+        </div>
+      </div>
+
+      <!-- TIMELINE -->
+      <div class="page" id="page-timeline">
+        <div class="page-header">
+          <div class="page-tag">✦ Perjalanan waktu</div>
+          <div class="page-title">Timeline</div>
+          <div class="page-sub">Semua kenangan dari awal hingga sekarang</div>
+        </div>
+        <div class="timeline-list" id="timeline-list">
+          <div class="loading"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>
+        </div>
+      </div>
+
+      <!-- ALBUM -->
+      <div class="page" id="page-album">
+        <div id="album-list-view">
+          <div class="page-header">
+            <div class="page-tag">✦ Koleksi perjalanan</div>
+            <div class="page-title">Album</div>
+            <div class="page-sub">Kumpulan foto per destinasi</div>
+          </div>
+          <div class="album-grid" id="album-grid">
+            <div class="loading"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>
+          </div>
+        </div>
+        <div id="album-detail-view" style="display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+            <button class="back-btn" style="margin-bottom:0" onclick="closeAlbumDetail()">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3L5 8l5 5"/></svg>
+              Kembali ke Album
+            </button>
+            <button onclick="openEditModal()" style="font-size:11px;color:var(--accent);background:transparent;border:0.5px solid var(--accent);padding:6px 14px;border-radius:8px;cursor:pointer;letter-spacing:1px">Edit</button>
+          </div>
+          <div class="page-header">
+            <div class="page-tag" id="detail-tag">✦</div>
+            <div class="page-title" id="detail-title">Album</div>
+            <div class="page-sub" id="detail-sub"></div>
+          </div>
+          <div class="detail-story" id="detail-story"></div>
+          <div class="detail-grid" id="detail-grid"></div>
+        </div>
+      </div>
+
+      <!-- PETA -->
+      <div class="page" id="page-peta">
+        <div class="page-header">
+          <div class="page-tag">✦ Jejak perjalanan</div>
+          <div class="page-title">Peta</div>
+          <div class="page-sub">Semua tempat yang pernah dikunjungi bersama</div>
+        </div>
+        <div class="map-placeholder">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#c4855a" stroke-width="1"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+          <div style="font-size:13px;color:var(--muted)">Peta lokasi perjalanan</div>
+          <div style="font-size:11px;color:var(--border)">Tambahkan album untuk melihat pin di sini</div>
+        </div>
+        <div class="map-pins" id="map-pins">
+          <div class="loading"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>
+        </div>
+      </div>
+
+      <!-- FAVORIT -->
+      <div class="page" id="page-favorit">
+        <div class="page-header">
+          <div class="page-tag">✦ Yang paling berkesan</div>
+          <div class="page-title">Favorit</div>
+          <div class="page-sub">Foto-foto yang sudah kamu tandai sebagai favorit</div>
+        </div>
+        <div class="favorit-grid" id="favorit-grid">
+          <div class="loading"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>
+        </div>
+      </div>
+
+      <!-- MOMEN -->
+      <div class="page" id="page-momen">
+        <div class="page-header">
+          <div class="page-tag">✦ Hari-hari spesial</div>
+          <div class="page-title">Momen</div>
+          <div class="page-sub">Anniversary, ulang tahun, dan hari bersejarah lainnya</div>
+        </div>
+        <div class="momen-list" id="momen-list">
+          <div class="loading"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>
+        </div>
+      </div>
+
+      <!-- TAMBAH -->
+      <div class="page" id="page-tambah">
+        <div class="page-header">
+          <div class="page-tag">✦ Simpan kenangan baru</div>
+          <div class="page-title">Tambah Kenangan</div>
+          <div class="page-sub">Upload foto dan tulis cerita perjalanan</div>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">Nama tempat / destinasi</label>
+          <input class="form-input" type="text" id="f-place" placeholder="Contoh: Bali, Indonesia">
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">Tanggal perjalanan</label>
+          <input class="form-input" type="date" id="f-date">
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">Cerita perjalanan</label>
+          <textarea class="form-input form-textarea" id="f-story" placeholder="Tulis cerita indah tentang perjalanan ini..."></textarea>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">Upload foto</label>
+          <div class="upload-zone" id="upload-zone" onclick="document.getElementById('f-photos').click()">
+            <div class="upload-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
+            <div class="upload-text">Tap untuk pilih foto, atau <span>drag & drop</span> di sini</div>
+            <div style="font-size:11px;color:var(--border);margin-top:6px">JPG, PNG · Maks 10MB per foto</div>
+          </div>
+          <input type="file" id="f-photos" multiple accept="image/*" style="display:none" onchange="handlePhotos(this)">
+          <div class="upload-preview" id="upload-preview"></div>
+          <div class="progress-bar" id="upload-progress-bar" style="display:none"><div class="progress-fill" id="upload-progress-fill"></div></div>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">Link video YouTube (opsional)</label>
+          <div class="video-input-wrap">
+            <input class="form-input" type="url" id="f-video" placeholder="https://youtube.com/watch?v=...">
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px">Upload video ke YouTube sebagai Unlisted, lalu paste link-nya di sini</div>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">Tandai sebagai favorit?</label>
+          <select class="form-input form-select" id="f-fav">
+            <option value="false">Tidak</option>
+            <option value="true">Ya, ini perjalanan favorit</option>
+          </select>
+        </div>
+
+        <button class="submit-btn" id="submit-btn" onclick="submitAlbum()">Simpan Kenangan</button>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lightbox">
+  <button id="lightbox-close" onclick="closeLightbox()">✕</button>
+  <div class="lb-inner">
+    <button class="lb-btn lb-prev" onclick="lbPrev()">&#8249;</button>
+    <div class="lb-img-wrap" id="lb-img-wrap">
+      <img id="lightbox-img" src="" alt="">
+    </div>
+    <button class="lb-btn lb-next" onclick="lbNext()">&#8250;</button>
+  </div>
+  <div class="lb-caption" id="lb-caption"></div>
+  <div class="lb-counter" id="lb-counter"></div>
+  <div class="lb-dots" id="lb-dots"></div>
+</div>
+
+<!-- EDIT MODAL -->
+<div id="edit-modal">
+  <div class="edit-box">
+    <div class="edit-title">Edit Kenangan</div>
+    <div class="form-section">
+      <label class="form-label">Nama tempat</label>
+      <input class="form-input" type="text" id="e-place">
+    </div>
+    <div class="form-section">
+      <label class="form-label">Tanggal</label>
+      <input class="form-input" type="date" id="e-date">
+    </div>
+    <div class="form-section">
+      <label class="form-label">Cerita</label>
+      <textarea class="form-input form-textarea" id="e-story"></textarea>
+    </div>
+    <div class="form-section">
+      <label class="form-label">Link video YouTube (opsional)</label>
+      <input class="form-input" type="url" id="e-video">
+    </div>
+    <div class="form-section">
+      <label class="form-label">Tambah foto baru (opsional)</label>
+      <div class="upload-zone" style="padding:16px" onclick="document.getElementById('e-photos').click()">
+        <div class="upload-text" style="font-size:12px">Tap untuk tambah foto</div>
+      </div>
+      <input type="file" id="e-photos" multiple accept="image/*" style="display:none" onchange="handleEditPhotos(this)">
+      <div class="upload-preview" id="edit-preview"></div>
+    </div>
+    <div class="edit-actions">
+      <button class="edit-cancel" onclick="closeEditModal()">Batal</button>
+      <button class="edit-delete" onclick="deleteAlbum()">Hapus</button>
+      <button class="edit-save" onclick="saveEdit()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div id="settings-modal">
+  <div class="settings-box">
+    <div class="settings-title">Pengaturan</div>
+    <div class="form-section">
+      <label class="form-label">Password baru</label>
+      <input class="form-input" type="password" id="new-pw" placeholder="Masukkan password baru">
+    </div>
+    <div class="form-section">
+      <label class="form-label">Konfirmasi password baru</label>
+      <input class="form-input" type="password" id="confirm-pw" placeholder="Ulangi password baru">
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:16px">Password disimpan di browser ini saja. Setiap perangkat baru perlu diatur ulang.</div>
+    <div class="edit-actions">
+      <button class="edit-cancel" onclick="closeSettings()">Batal</button>
+      <button class="edit-save" onclick="savePassword()">Simpan Password</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, doc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAHefQyNAcWVZ4DvPY3KeScJW0GGj5tFNM",
+  authDomain: "rainda-30550.firebaseapp.com",
+  projectId: "rainda-30550",
+  storageBucket: "rainda-30550.firebasestorage.app",
+  messagingSenderId: "1024450568169",
+  appId: "1:1024450568169:web:f0decee8a0a8dce484b578"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const CLOUDINARY_CLOUD = 'dorvyur5s';
+const CLOUDINARY_PRESET = 'Rainda';
+const PASSWORD = 'rainda170325';
+
+window._db = db;
+window._col = collection;
+window._addDoc = addDoc;
+window._getDocs = getDocs;
+window._query = query;
+window._orderBy = orderBy;
+window._doc = doc;
+window._updateDoc = updateDoc;
+window._serverTimestamp = serverTimestamp;
+window.CLOUDINARY_CLOUD = CLOUDINARY_CLOUD;
+window.CLOUDINARY_PRESET = CLOUDINARY_PRESET;
+window.PASSWORD = PASSWORD;
+
+window.dispatchEvent(new Event('firebase-ready'));
+</script>
+
+<script>
+// ── STATE ──
+let albums = [];
+let pendingPhotos = [];
+let currentAlbum = null;
+let firebaseReady = false;
+
+// ── LOCK ──
+function tryUnlock() {
+  const val = document.getElementById('lock-input').value;
+  const storedPw = localStorage.getItem('rainda_pw');
+  const activePw = storedPw || window.PASSWORD;
+  if (val === activePw) {
+    document.getElementById('lock-screen').classList.add('hide');
+    document.getElementById('app').classList.add('show');
+    setTimeout(() => {
+      document.getElementById('lock-screen').style.display = 'none';
+      loadAllData();
+    }, 600);
+  } else {
+    const err = document.getElementById('lock-err');
+    err.classList.add('show');
+    document.getElementById('lock-input').value = '';
+    setTimeout(() => err.classList.remove('show'), 2000);
+  }
+}
+
+function lockApp() {
+  document.getElementById('lock-input').value = '';
+  document.getElementById('lock-screen').style.display = 'flex';
+  setTimeout(() => document.getElementById('lock-screen').classList.remove('hide'), 10);
+  document.getElementById('app').classList.remove('show');
+}
+
+document.getElementById('lock-input').addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
+
+// ── NAVIGATION ──
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (el) el.classList.add('active');
+  if (name === 'album') { document.getElementById('album-list-view').style.display='block'; document.getElementById('album-detail-view').style.display='none'; }
+}
+window.showPage = showPage;
+
+// ── FIREBASE READY ──
+window.addEventListener('firebase-ready', () => {
+  firebaseReady = true;
+});
+
+// ── LOAD ALL DATA ──
+async function loadAllData() {
+  if (!firebaseReady) { setTimeout(loadAllData, 200); return; }
+  try {
+    const q = window._query(window._col(window._db, 'albums'), window._orderBy('date', 'desc'));
+    const snap = await window._getDocs(q);
+    albums = [];
+    snap.forEach(d => albums.push({ id: d.id, ...d.data() }));
+    renderBeranda();
+    renderTimeline();
+    renderAlbumGrid();
+    renderPeta();
+    renderFavorit();
+    renderMomen();
+  } catch(e) {
+    console.error(e);
+    showToast('Gagal memuat data. Cek koneksi internet.');
+  }
+}
+
+// ── BERANDA ──
+function renderBeranda() {
+  document.getElementById('stat-albums').textContent = albums.length;
+  const totalPhotos = albums.reduce((a, b) => a + (b.photos ? b.photos.length : 0), 0);
+  document.getElementById('stat-photos').textContent = totalPhotos;
+  const grid = document.getElementById('recent-grid');
+  if (albums.length === 0) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);font-size:13px;font-style:italic">Belum ada kenangan. Yuk tambahkan perjalanan pertama! ✦</div>';
+    return;
+  }
+  grid.innerHTML = albums.slice(0, 6).map(a => `
+    <div class="recent-card" onclick="openAlbumDetail('${a.id}')">
+      <div class="recent-thumb">
+        ${a.photos && a.photos[0] ? `<img src="${a.photos[0]}" alt="${a.place}" loading="lazy">` : '<div class="recent-thumb-placeholder" style="background:var(--bg3)"></div>'}
+      </div>
+      <div class="recent-info">
+        <div class="recent-place">${a.place}</div>
+        <div class="recent-date">${formatDate(a.date)}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ── TIMELINE ──
+function renderTimeline() {
+  const list = document.getElementById('timeline-list');
+  if (albums.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:13px;font-style:italic">Belum ada perjalanan. Mulai dari yang pertama! ✦</div>';
+    return;
+  }
+  const byYear = {};
+  albums.forEach(a => {
+    const y = a.date ? a.date.substring(0,4) : 'Lainnya';
+    if (!byYear[y]) byYear[y] = [];
+    byYear[y].push(a);
+  });
+  list.innerHTML = Object.keys(byYear).sort((a,b)=>b-a).map(year => `
+    <div class="timeline-year">${year}</div>
+    ${byYear[year].map((a, i, arr) => `
+      <div class="timeline-item">
+        <div class="tl-left">
+          <div class="tl-dot"></div>
+          ${i < arr.length - 1 ? '<div class="tl-line"></div>' : ''}
+        </div>
+        <div class="tl-card" onclick="openAlbumDetail('${a.id}')">
+          <div class="tl-top">
+            <div class="tl-place">${a.place}</div>
+            <div class="tl-date">${formatDate(a.date)}</div>
+          </div>
+          ${a.story ? `<div class="tl-desc">"${a.story.substring(0,120)}${a.story.length>120?'...':''}"</div>` : ''}
+          <div class="tl-photos">
+            ${(a.photos||[]).slice(0,4).map(p=>`<img class="tl-photo" src="${p}" alt="" loading="lazy">`).join('')}
+            ${(a.photos||[]).length > 4 ? `<div class="tl-more">+${a.photos.length-4}</div>` : ''}
+          </div>
+        </div>
+      </div>`).join('')}
+  `).join('');
+}
+
+// ── ALBUM GRID ──
+function renderAlbumGrid() {
+  const grid = document.getElementById('album-grid');
+  const cards = albums.map(a => `
+    <div class="album-card" onclick="openAlbumDetail('${a.id}')">
+      <div class="album-cover">
+        ${(a.photos||[]).slice(0,4).map(p=>`<div class="album-cover-cell"><img src="${p}" alt="" loading="lazy"></div>`).join('')}
+        ${Array(Math.max(0,4-(a.photos||[]).length)).fill('<div class="album-cover-cell album-cover-placeholder" style="background:var(--bg3)"></div>').join('')}
+      </div>
+      <div class="album-info">
+        <div class="album-name">${a.place}</div>
+        <div class="album-meta">${(a.photos||[]).length} foto${a.video?' · 1 video':''} · ${formatDate(a.date)}</div>
+      </div>
+    </div>`).join('');
+  grid.innerHTML = cards + `
+    <div class="album-card album-add" onclick="showPage('tambah', document.querySelectorAll('.nav-item')[6])">
+      <div class="album-add-icon">+</div>
+      <div class="album-add-label">Tambah album baru</div>
+    </div>`;
+}
+
+// ── ALBUM DETAIL ──
+function openAlbumDetail(id) {
+  const a = albums.find(x => x.id === id);
+  if (!a) return;
+  currentAlbum = a;
+  document.getElementById('album-list-view').style.display = 'none';
+  document.getElementById('album-detail-view').style.display = 'block';
+  document.getElementById('detail-tag').textContent = '✦ ' + formatDate(a.date);
+  document.getElementById('detail-title').textContent = a.place;
+  document.getElementById('detail-sub').textContent = `${(a.photos||[]).length} foto${a.video?' · 1 video':''}`;
+  document.getElementById('detail-story').textContent = a.story || 'Belum ada cerita.';
+  const grid = document.getElementById('detail-grid');
+  const photos = a.photos || [];
+  let html = photos.map((p,i)=>`<img class="detail-photo" src="${p}" alt="" loading="lazy" onclick="openLightbox('${p}','${a.place}',${JSON.stringify(photos)},${i})">`).join('');
+  if (a.video) {
+    const vid = getYTEmbed(a.video);
+    if (vid) html += `<div style="grid-column:1/-1;border-radius:12px;overflow:hidden;margin-top:8px"><iframe width="100%" height="200" src="${vid}" frameborder="0" allowfullscreen style="display:block"></iframe></div>`;
+  }
+  grid.innerHTML = html;
+  showPage('album', null);
+}
+
+function closeAlbumDetail() {
+  document.getElementById('album-list-view').style.display = 'block';
+  document.getElementById('album-detail-view').style.display = 'none';
+}
+window.closeAlbumDetail = closeAlbumDetail;
+
+// ── PETA ──
+function renderPeta() {
+  const pins = document.getElementById('map-pins');
+  if (albums.length === 0) { pins.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">Belum ada lokasi tersimpan</div>'; return; }
+  pins.innerHTML = albums.map(a => `
+    <div class="map-pin-item">
+      <div class="pin-dot"></div>
+      <div class="pin-place">${a.place}</div>
+      <div class="pin-count">${(a.photos||[]).length} foto</div>
+      <div class="pin-date">${formatDate(a.date)}</div>
+    </div>`).join('');
+}
+
+// ── FAVORIT ──
+function renderFavorit() {
+  const grid = document.getElementById('favorit-grid');
+  const favs = albums.filter(a => a.favorite);
+  const allFavPhotos = favs.flatMap(a => (a.photos||[]).slice(0,4).map(p=>({p,place:a.place,id:a.id})));
+  if (allFavPhotos.length === 0) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);font-size:13px;font-style:italic">Tandai perjalanan sebagai favorit saat upload foto ✦</div>';
+    return;
+  }
+  grid.innerHTML = allFavPhotos.map(({p,place,id}) => `
+    <div class="fav-photo" onclick="openLightbox('${p}','${place}')">
+      <img src="${p}" alt="${place}" loading="lazy" style="width:100%;height:100%;object-fit:cover">
+      <div class="fav-heart">
+        <svg width="10" height="10" viewBox="0 0 16 16" fill="#c4855a" stroke="none"><path d="M8 13.5S2 9.5 2 5.5A3.5 3.5 0 018 3.5 3.5 3.5 0 0114 5.5c0 4-6 8-6 8z"/></svg>
+      </div>
+    </div>`).join('');
+}
+
+// ── MOMEN ──
+function renderMomen() {
+  const list = document.getElementById('momen-list');
+  const momen = [
+    { name: 'Hari Jadi', date: '2025-03-17', icon: '♡' },
+  ];
+  const today = new Date();
+  list.innerHTML = momen.map(m => {
+    const d = new Date(m.date);
+    const next = new Date(today.getFullYear(), d.getMonth(), d.getDate());
+    if (next < today) next.setFullYear(today.getFullYear() + 1);
+    const diff = Math.ceil((next - today) / (1000*60*60*24));
+    return `
+    <div class="momen-card">
+      <div class="momen-icon-wrap"><span style="font-size:18px">${m.icon}</span></div>
+      <div class="momen-info">
+        <div class="momen-name">${m.name}</div>
+        <div class="momen-date">${formatDate(m.date)}</div>
+      </div>
+      <div class="momen-days">${diff === 0 ? 'Hari ini!' : diff + ' hari lagi'}</div>
+    </div>`;
+  }).join('') + `<button class="momen-add-btn" onclick="showPage('tambah',null)">+ Tambah momen spesial</button>`;
+}
+
+// ── UPLOAD & SUBMIT ──
+function handlePhotos(input) {
+  pendingPhotos = Array.from(input.files);
+  const preview = document.getElementById('upload-preview');
+  preview.innerHTML = pendingPhotos.map((f,i) => {
+    const url = URL.createObjectURL(f);
+    return `<div class="upload-preview-item"><img src="${url}" alt=""><button class="upload-remove" onclick="removePhoto(${i})">✕</button></div>`;
+  }).join('');
+}
+window.handlePhotos = handlePhotos;
+
+function removePhoto(idx) {
+  pendingPhotos.splice(idx, 1);
+  const preview = document.getElementById('upload-preview');
+  preview.innerHTML = pendingPhotos.map((f,i) => {
+    const url = URL.createObjectURL(f);
+    return `<div class="upload-preview-item"><img src="${url}" alt=""><button class="upload-remove" onclick="removePhoto(${i})">✕</button></div>`;
+  }).join('');
+}
+window.removePhoto = removePhoto;
+
+async function uploadToCloudinary(file, onProgress) {
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('upload_preset', window.CLOUDINARY_PRESET);
+  const xhr = new XMLHttpRequest();
+  return new Promise((res, rej) => {
+    xhr.upload.onprogress = e => { if (e.lengthComputable) onProgress(e.loaded/e.total); };
+    xhr.onload = () => {
+      const data = JSON.parse(xhr.responseText);
+      if (data.secure_url) res(data.secure_url);
+      else rej(new Error('Upload gagal'));
+    };
+    xhr.onerror = () => rej(new Error('Network error'));
+    xhr.open('POST', `https://api.cloudinary.com/v1_1/${window.CLOUDINARY_CLOUD}/image/upload`);
+    xhr.send(fd);
+  });
+}
+
+async function submitAlbum() {
+  const place = document.getElementById('f-place').value.trim();
+  const date = document.getElementById('f-date').value;
+  const story = document.getElementById('f-story').value.trim();
+  const video = document.getElementById('f-video').value.trim();
+  const fav = document.getElementById('f-fav').value === 'true';
+
+  if (!place || !date) { showToast('Nama tempat dan tanggal wajib diisi'); return; }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Mengupload...';
+
+  const bar = document.getElementById('upload-progress-bar');
+  const fill = document.getElementById('upload-progress-fill');
+  bar.style.display = 'block';
+
+  try {
+    const urls = [];
+    for (let i = 0; i < pendingPhotos.length; i++) {
+      const url = await uploadToCloudinary(pendingPhotos[i], p => {
+        const overall = ((i + p) / pendingPhotos.length) * 100;
+        fill.style.width = overall + '%';
+      });
+      urls.push(url);
+    }
+
+    await window._addDoc(window._col(window._db, 'albums'), {
+      place, date, story, video, favorite: fav,
+      photos: urls,
+      createdAt: window._serverTimestamp()
+    });
+
+    showToast('Kenangan berhasil disimpan! ✦');
+    document.getElementById('f-place').value = '';
+    document.getElementById('f-date').value = '';
+    document.getElementById('f-story').value = '';
+    document.getElementById('f-video').value = '';
+    document.getElementById('f-fav').value = 'false';
+    document.getElementById('upload-preview').innerHTML = '';
+    pendingPhotos = [];
+    bar.style.display = 'none';
+    fill.style.width = '0%';
+    await loadAllData();
+    showPage('album', document.querySelectorAll('.nav-item')[2]);
+  } catch(e) {
+    console.error(e);
+    showToast('Gagal menyimpan. Coba lagi.');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Simpan Kenangan';
+}
+window.submitAlbum = submitAlbum;
+
+// ── LIGHTBOX WITH SWIPE ──
+let lbPhotos = [], lbIndex = 0, lbCaption = '';
+let tsX = 0, tsY = 0;
+
+function openLightbox(src, caption, photos, idx) {
+  lbPhotos = photos || [src];
+  lbIndex = idx !== undefined ? idx : lbPhotos.indexOf(src);
+  if (lbIndex < 0) lbIndex = 0;
+  lbCaption = caption || '';
+  renderLightbox();
+  document.getElementById('lightbox').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function renderLightbox() {
+  document.getElementById('lightbox-img').src = lbPhotos[lbIndex];
+  document.getElementById('lb-caption').textContent = lbCaption;
+  document.getElementById('lb-counter').textContent = lbPhotos.length > 1 ? (lbIndex+1) + ' / ' + lbPhotos.length : '';
+  const dots = document.getElementById('lb-dots');
+  if (lbPhotos.length > 1 && lbPhotos.length <= 12) {
+    dots.innerHTML = lbPhotos.map((_,i) => `<div class="lb-dot${i===lbIndex?' active':''}"></div>`).join('');
+  } else { dots.innerHTML = ''; }
+}
+
+function lbNext() { if (lbPhotos.length > 1) { lbIndex = (lbIndex+1) % lbPhotos.length; renderLightbox(); } }
+function lbPrev() { if (lbPhotos.length > 1) { lbIndex = (lbIndex-1+lbPhotos.length) % lbPhotos.length; renderLightbox(); } }
+
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+// Touch swipe
+const lbWrap = document.getElementById('lb-img-wrap');
+lbWrap.addEventListener('touchstart', e => { tsX = e.touches[0].clientX; tsY = e.touches[0].clientY; }, {passive:true});
+lbWrap.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - tsX;
+  const dy = e.changedTouches[0].clientY - tsY;
+  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) { dx < 0 ? lbNext() : lbPrev(); }
+});
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('lightbox').classList.contains('show')) return;
+  if (e.key === 'ArrowRight') lbNext();
+  if (e.key === 'ArrowLeft') lbPrev();
+  if (e.key === 'Escape') closeLightbox();
+});
+
+document.getElementById('lightbox').addEventListener('click', e => {
+  if (e.target === document.getElementById('lightbox')) closeLightbox();
+});
+
+window.openLightbox = openLightbox;
+window.closeLightbox = closeLightbox;
+window.lbNext = lbNext;
+window.lbPrev = lbPrev;
+
+// ── EDIT MODAL ──
+let editPhotos = [];
+
+function openEditModal() {
+  if (!currentAlbum) return;
+  document.getElementById('e-place').value = currentAlbum.place || '';
+  document.getElementById('e-date').value = currentAlbum.date || '';
+  document.getElementById('e-story').value = currentAlbum.story || '';
+  document.getElementById('e-video').value = currentAlbum.video || '';
+  document.getElementById('edit-preview').innerHTML = '';
+  editPhotos = [];
+  document.getElementById('edit-modal').classList.add('show');
+}
+
+function closeEditModal() { document.getElementById('edit-modal').classList.remove('show'); }
+window.openEditModal = openEditModal;
+window.closeEditModal = closeEditModal;
+
+function handleEditPhotos(input) {
+  editPhotos = Array.from(input.files);
+  const preview = document.getElementById('edit-preview');
+  preview.innerHTML = editPhotos.map((f,i) => {
+    const url = URL.createObjectURL(f);
+    return `<div class="upload-preview-item"><img src="${url}" alt=""></div>`;
+  }).join('');
+}
+window.handleEditPhotos = handleEditPhotos;
+
+async function saveEdit() {
+  if (!currentAlbum) return;
+  const place = document.getElementById('e-place').value.trim();
+  const date = document.getElementById('e-date').value;
+  const story = document.getElementById('e-story').value.trim();
+  const video = document.getElementById('e-video').value.trim();
+  if (!place || !date) { showToast('Nama tempat dan tanggal wajib diisi'); return; }
+
+  const btn = document.querySelector('.edit-save');
+  btn.textContent = 'Menyimpan...';
+  btn.disabled = true;
+
+  try {
+    let newPhotos = [...(currentAlbum.photos || [])];
+    for (const f of editPhotos) {
+      const url = await uploadToCloudinary(f, ()=>{});
+      newPhotos.push(url);
+    }
+    await window._updateDoc(window._doc(window._db, 'albums', currentAlbum.id), { place, date, story, video, photos: newPhotos });
+    showToast('Kenangan berhasil diperbarui ✦');
+    closeEditModal();
+    await loadAllData();
+    const updated = albums.find(a => a.id === currentAlbum.id);
+    if (updated) openAlbumDetail(updated.id);
+  } catch(e) {
+    console.error(e);
+    showToast('Gagal menyimpan. Coba lagi.');
+  }
+  btn.textContent = 'Simpan'; btn.disabled = false;
+}
+window.saveEdit = saveEdit;
+
+async function deleteAlbum() {
+  if (!currentAlbum) return;
+  if (!confirm('Hapus album "' + currentAlbum.place + '"? Tindakan ini tidak bisa dibatalkan.')) return;
+  try {
+    const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    await deleteDoc(window._doc(window._db, 'albums', currentAlbum.id));
+    showToast('Album berhasil dihapus');
+    closeEditModal();
+    closeAlbumDetail();
+    await loadAllData();
+  } catch(e) { showToast('Gagal menghapus. Coba lagi.'); }
+}
+window.deleteAlbum = deleteAlbum;
+
+// ── PASSWORD SETTINGS ──
+function openSettings() { document.getElementById('settings-modal').classList.add('show'); }
+function closeSettings() { document.getElementById('settings-modal').classList.remove('show'); }
+window.openSettings = openSettings;
+window.closeSettings = closeSettings;
+
+function savePassword() {
+  const np = document.getElementById('new-pw').value;
+  const cp = document.getElementById('confirm-pw').value;
+  if (!np) { showToast('Password tidak boleh kosong'); return; }
+  if (np !== cp) { showToast('Password tidak cocok'); return; }
+  if (np.length < 6) { showToast('Password minimal 6 karakter'); return; }
+  localStorage.setItem('rainda_pw', np);
+  window.PASSWORD = np;
+  showToast('Password berhasil diubah ✦');
+  document.getElementById('new-pw').value = '';
+  document.getElementById('confirm-pw').value = '';
+  closeSettings();
+}
+window.savePassword = savePassword;
+
+// ── HELPERS ──
+function formatDate(str) {
+  if (!str) return '';
+  const d = new Date(str + 'T00:00:00');
+  return d.toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+}
+
+function getYTEmbed(url) {
+  const m = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return m ? `https://www.youtube.com/embed/${m[1]}` : null;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── DRAG & DROP ──
+const zone = document.getElementById('upload-zone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+zone.addEventListener('drop', e => {
+  e.preventDefault();
+  zone.classList.remove('dragover');
+  const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+  pendingPhotos = files;
+  const preview = document.getElementById('upload-preview');
+  preview.innerHTML = files.map((f,i) => {
+    const url = URL.createObjectURL(f);
+    return `<div class="upload-preview-item"><img src="${url}" alt=""><button class="upload-remove" onclick="removePhoto(${i})">✕</button></div>`;
+  }).join('');
+});
+</script>
+</body>
+</html>
