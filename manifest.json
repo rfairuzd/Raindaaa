@@ -1,0 +1,19 @@
+{
+  "name": "Rainda",
+  "short_name": "Rainda",
+  "description": "Galeri perjalanan kita",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#1a0a2e",
+  "theme_color": "#2d1054",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "LOGO_RAINDA.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
