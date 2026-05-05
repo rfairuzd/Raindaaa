@@ -5,10 +5,10 @@
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#2d1b0e",
-  "theme_color": "#2d1b0e",
+  "background_color": "#1a0a2e",
+  "theme_color": "#2d1054",
   "orientation": "portrait",
   "icons": [
-    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "LOGO_RAINDA.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ]
 }
